@@ -20,7 +20,7 @@ function [] = fn_cond_forecast_error(EstMdl,hori,y_names)
 	for i1 = 1:nburns
 		% fix the same seed across draws
 		rng(i1);
-		Z = normrnd(0,1,[max(hori) N])*EstMdl.Covariance;
+		Z = normrnd(0,1,[max(hori) N]);%*EstMdl.Covariance;
 
 		% for each contribution
 		for i2=1:N

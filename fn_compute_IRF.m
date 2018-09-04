@@ -21,7 +21,7 @@ end
 
 %%% Generating the random variable
 %%% options:
-nb_simul 	= 50;
+nb_simul 	= 200;
 T_irf		= 50;
 
 % compute the upper and lower bound
@@ -36,8 +36,8 @@ for i1 = 1:EstMdl.NumSeries % for each shock
 	for i2 = 1:nb_simul % sampling response to draw intervals
 		W_simul = zeros(T_irf,EstMdl.NumSeries);
 		%W_simul(1,i1) = abs(normrnd(0,1,1,1)); % random N(0,1)
-		%W_simul(1,:) = W_simul(1,:)*VarObj.Q^.5;
-		W_simul(1,i1) = abs(normrnd(0,1,1,1))*EstMdl.Covariance(i1,i1)^.5;
+		%W_simul(1,i1) = abs(normrnd(0,1,1,1))*EstMdl.Covariance(i1,i1)^.5;
+		W_simul(1,i1) = abs(normrnd(0,1,1,1))^.5;
 		simul_irf = filter(EstMdl,W_simul);%fn_gen_data(VarObj,W_simul);
 		for i3 = 1:EstMdl.NumSeries
 			irf_all_var = Y_simul{i3};

@@ -10,4 +10,5 @@ function [res] = fn_OLS_min(x,theY,theX,theb)
 	res = theY - theX*theb;
 	% square them plz
 	res = res'*res;
+	
 end

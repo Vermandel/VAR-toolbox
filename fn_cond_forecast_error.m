@@ -14,14 +14,34 @@ function [] = fn_cond_forecast_error(EstMdl,hori,y_names)
 		end
 	end
 
-	%% first sampling
-	nburns = 50;
+	
+	nburns = 500;		% number of paths
+	Tpresample = 50;	% presample before the forecast
+	
+	%
+
+	
 	fce = nan(N,N,length(hori),nburns);
 	for i1 = 1:nburns
-		% fix the same seed across draws
-		rng(i1);
+		
+		% draw future shocks after the forecast
+		% to compute the contribution to the error
+		rng(i1,'twister');		% fix the same seed across draws
 		Z = normrnd(0,1,[max(hori) N]);%*EstMdl.Covariance;
-
+		
+		% simulate pre-sample before the forecast
+		rng(i1+100,'twister');	% fix the same seed across draws
+		Y0 	= filter(EstMdl,normrnd(0,1,Tpresample,N));
+		
+		% Run the forecast and feed the model with pre-samples
+		%Y_fc 	= simulate(EstMdl,max(hori),'Y0',Y0);
+		Y_fc 	= filter(EstMdl,0*Z,'Y0',Y0); % forecast using no shocks
+		% Run the true (realized) value
+		Ysimul = filter(EstMdl,Z,'Y0',Y0);
+		
+		% squared error forecast
+		sq_err_fc = (Ysimul - Y_fc).^2;
+		
 		% for each contribution
 		for i2=1:N
 			
@@ -29,18 +49,11 @@ function [] = fn_cond_forecast_error(EstMdl,hori,y_names)
 			ZZ = zeros(size(Z));
 			ZZ(:,i2) = Z(:,i2);
 			% simulate with one shock
-			Ysimul = filter(EstMdl,ZZ);
+			Ysimul  = filter(EstMdl,ZZ,'Y0',Y0);
+			sq_err_fc_i = (Ysimul - Y_fc).^2;
 			
-			% compute the conditional variance
-			for i3=1:length(hori)
-				if hori(i3) == 1 % then cannot compute the var
-					thevar = zeros(N,1);
-					thevar(i2) = 1;
-					fce(:,i2,i3,i1) = thevar;
-				else
-					fce(:,i2,i3,i1) = var(Ysimul(1:hori(i3),:))';
-				end
-			end
+			% store the conditional variance
+			fce(:,i2,:,i1) = sq_err_fc_i(hori,:)';
 		
 		end
 	end

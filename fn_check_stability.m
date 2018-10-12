@@ -1,6 +1,6 @@
 function [] = fn_check_stability(EstMdl)
 %fn_check_stability Summary of this function goes here
-%   Detailed explanation goes here
+%   Check whether VAR eigenvalues are below the unit circle
 
 	% get the F-matrix of the state state VAR
 	[~,F] 	= fn_VAR_statespace(EstMdl);

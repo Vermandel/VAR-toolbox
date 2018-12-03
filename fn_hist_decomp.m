@@ -21,7 +21,7 @@ function [outputArg1,outputArg2] = fn_hist_decomp(EstMdl,W,T,y_names)
 	%%% COMPUTE THE HISTORICAL CONTRIBUTION
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% Historical contribution by shock
-	Ycontrib	= repmat({zeros(nT,N)},1,3);
+	Ycontrib	= repmat({zeros(nT,N)},1,N);
 	% get ss
 	simul_ss = filter(EstMdl,zeros(1,EstMdl.NumSeries));
 	% computing the contribution of each shock to 
@@ -32,7 +32,6 @@ function [outputArg1,outputArg2] = fn_hist_decomp(EstMdl,W,T,y_names)
 		% Feeding with one shock
 		W2(:,i1) = [zeros(p,1);W(:,i1)];
 		% computing the contribution of that shock
-		%shock_contrib = fn_simul(EstMdl,W2)';
 		shock_contrib = filter(EstMdl,W2);
 		% removing pre-sample induced by lags
 		shock_contrib = shock_contrib((1+p):end,:)-simul_ss;
@@ -59,22 +58,23 @@ function [outputArg1,outputArg2] = fn_hist_decomp(EstMdl,W,T,y_names)
 		hold on;
 		thecontribs = Ycontrib{i1};
 		% find contribution above/below 0
-		contrib_above = (thecontribs>=simul_ss(i1)).*thecontribs;
-		contrib_below = (thecontribs<=simul_ss(i1)).*thecontribs;
+		contrib_above = (thecontribs>=0*simul_ss(i1)).*thecontribs;
+		contrib_below = (thecontribs<0*simul_ss(i1)).*thecontribs;
 		for i2 = 1:nT % each period
 			for i3 = 1:N % each shock
-				if thecontribs(i2,i3) >= simul_ss(i1)
+				if thecontribs(i2,i3) >= 0
 					ymini = simul_ss(i1)+sum(contrib_above(i2,1:i3))-thecontribs(i2,i3);
 					ymax = simul_ss(i1)+sum(contrib_above(i2,1:i3));
 				else
-					ymini = simul_ss(i1)+sum(contrib_below(i2,1:i3))-thecontribs(i2,i3);
-					ymax = simul_ss(i1)+sum(contrib_below(i2,1:i3));
+					ymax = simul_ss(i1)+sum(contrib_below(i2,1:i3))-thecontribs(i2,i3);
+					ymini = simul_ss(i1)+sum(contrib_below(i2,1:i3));
 				end
 				fill([T(i2)-time_split/2;T(i2)-time_split/2;T(i2)+time_split/2;T(i2)+time_split/2],[ymini;ymax;ymax;ymini],linecolor(i3),'EdgeColor','none')
 			end
 		end
 		%plot(T,Yfilt((1+p):end,i1)-0*simul_ss(i1),'k','LineWidth',1.5)
-		plot(T,Yfilt((1+p):end,i1)-0*simul_ss(i1),'Color',[47 141 231]/255,'LineWidth',1.5)
+		%plot(T,Yfilt((1+p):end,i1),'Color',[47 141 231]/255,'LineWidth',1.5)
+		plot(T,simul_ss(i1)+sum(thecontribs,2),'Color',[47 141 231]/255,'LineWidth',1.5)
 		hold off;
 		xlim([min(T) max(T)])
 		title(['Historical decomposition of ' y_names{i1}])

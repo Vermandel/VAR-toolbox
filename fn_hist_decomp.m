@@ -51,8 +51,9 @@ function [outputArg1,outputArg2] = fn_hist_decomp(EstMdl,W,T,y_names)
 	%%% PLOT THE HISTORICAL CONTRIBUTION
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	time_split	= mean(diff(T)); % 1=years; 1/4 = quarters 
-	linecolor	= char('b','r','g','m','c','k');
-	% plotting
+	%linecolor	= char('b','r','g','m','c','k');
+	linecolor	= {[  0   0 128]/255,[220  20  60]/255,[50 205  50]/255,[0 128 128]/255,[255   0 255]/255,[47  79  79]/255,[192 192 192]/255,[102 205 170]/255,[0 255 127]/255,[ 85 107  47]/255,[210 105  30]/255,[189 183 107]/255,[219 112 147]/255};
+    % plotting
 	for i1 = 1:N % each variable
 		figure;
 		hold on;
@@ -68,9 +69,13 @@ function [outputArg1,outputArg2] = fn_hist_decomp(EstMdl,W,T,y_names)
 				else
 					ymax = simul_ss(i1)+sum(contrib_below(i2,1:i3))-thecontribs(i2,i3);
 					ymini = simul_ss(i1)+sum(contrib_below(i2,1:i3));
-				end
-				fill([T(i2)-time_split/2;T(i2)-time_split/2;T(i2)+time_split/2;T(i2)+time_split/2],[ymini;ymax;ymax;ymini],linecolor(i3),'EdgeColor','none')
-			end
+                end
+                %fill([T(i2)-time_split/2;T(i2)-time_split/2;T(i2)+time_split/2;T(i2)+time_split/2],[ymini;ymax;ymax;ymini],'r')
+
+                if ceil(abs(ymini - ymax)*1000)/1000 > 1e-04
+                    fill([T(i2)-time_split/2;T(i2)-time_split/2;T(i2)+time_split/2;T(i2)+time_split/2],[ymini;ymax;ymax;ymini],linecolor{i3},'EdgeColor','none')
+                end
+           end
 		end
 		%plot(T,Yfilt((1+p):end,i1)-0*simul_ss(i1),'k','LineWidth',1.5)
 		%plot(T,Yfilt((1+p):end,i1),'Color',[47 141 231]/255,'LineWidth',1.5)

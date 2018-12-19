@@ -72,9 +72,9 @@ function [outputArg1,outputArg2] = fn_hist_decomp(EstMdl,W,T,y_names)
                 end
                 %fill([T(i2)-time_split/2;T(i2)-time_split/2;T(i2)+time_split/2;T(i2)+time_split/2],[ymini;ymax;ymax;ymini],'r')
 
-                if ceil(abs(ymini - ymax)*1000)/1000 > 1e-04
+                %if ceil(abs(ymini - ymax)*1000)/1000 > 1e-04
                     fill([T(i2)-time_split/2;T(i2)-time_split/2;T(i2)+time_split/2;T(i2)+time_split/2],[ymini;ymax;ymax;ymini],linecolor{i3},'EdgeColor','none')
-                end
+                %end
            end
 		end
 		%plot(T,Yfilt((1+p):end,i1)-0*simul_ss(i1),'k','LineWidth',1.5)

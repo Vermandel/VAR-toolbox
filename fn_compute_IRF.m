@@ -1,4 +1,4 @@
-function [ irfs ] = fn_compute_IRF(EstMdl,ICp,y_names,W)
+function [ irfs ] = fn_compute_IRF(Mdl,EstMdl,W,ICp,y_names)
 %FN_COMPUTEIRF Summary of this function goes here
 %   Detailed explanation goes here
 

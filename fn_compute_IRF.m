@@ -1,4 +1,4 @@
-function [ irfs ] = fn_compute_IRF(EstMdl,ICp,y_names)
+function [ irfs ] = fn_compute_IRF(EstMdl,ICp,y_names,W)
 %FN_COMPUTEIRF Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -22,39 +22,55 @@ end
 %%% Generating the random variable
 %%% options:
 nb_simul 	= 200;
+nb_simuly 	= 1000;
 T_irf		= 50;
 
 % compute the upper and lower bound
 IC = norminv([ (1-ICp)/2 1-(1-ICp)/2],0,1);
 
-% compute the steady state
-simul_ss = filter(EstMdl,zeros(T_irf,EstMdl.NumSeries));%fn_gen_data(VarObj,zeros(T_irf,VarObj.n));
+irf_all_var = nan(T_irf,EstMdl.NumSeries,nb_simul,EstMdl.NumSeries);
 
-for i1 = 1:EstMdl.NumSeries % for each shock
+for i2 = 1:nb_simul % sampling response to draw intervals
+	
+	rng(i2);
+	
+	% artificial draws
+	simul_y_hat = filter(EstMdl,randn(nb_simuly,EstMdl.NumSeries));%fn_gen_data(VarObj,zeros(T_irf,VarObj.n));
+	%simul_y_hat = filter(EstMdl,W(randi(size(W,1),nb_simuly,1),:));%fn_gen_data(VarObj,zeros(T_irf,VarObj.n));
+	
+	% re-estimate the model
+	[EstMdl_i] = estimate(Mdl,simul_y_hat);
+	
+	
+	% Randomize constants
+	%EstMdl_i.Constant = EstMdl.Constant + EstStdErrors.Constant.*randn(EstMdl.NumSeries,1);
+	%% Randomize AR
+	%for p = 1:EstMdl.P
+	%	EstMdl_i.AR{p} = EstMdl.AR{p} + EstStdErrors.AR{p}.*randn(EstMdl.P,EstMdl.P);
+	%end
+	
+	% compute asymptotic mean
+	simul_ss = filter(EstMdl_i,zeros(T_irf,EstMdl_i.NumSeries));
 
-	Y_simul		= repmat({nan(T_irf,nb_simul)},1,EstMdl.NumSeries);
-	for i2 = 1:nb_simul % sampling response to draw intervals
+	for i1 = 1:EstMdl.NumSeries % for each shock	
 		W_simul = zeros(T_irf,EstMdl.NumSeries);
-		%W_simul(1,i1) = abs(normrnd(0,1,1,1)); % random N(0,1)
-		%W_simul(1,i1) = abs(normrnd(0,1,1,1))*EstMdl.Covariance(i1,i1)^.5;
-		W_simul(1,i1) = abs(normrnd(0,1,1,1))^.5;
-		simul_irf = filter(EstMdl,W_simul);%fn_gen_data(VarObj,W_simul);
-		for i3 = 1:EstMdl.NumSeries
-			irf_all_var = Y_simul{i3};
-			irf_all_var(:,i2) = simul_irf(:,i3)-simul_ss(:,i3);%(simul_irf(:,i3)-simul_ss(:,i1))./simul_ss(:,i1);
-			Y_simul{i3} = irf_all_var;
-		end
+		W_simul(1,i1) = 1;
+		W_simul(1,:) = W_simul(1,:)*chol(EstMdl_i.Covariance)';
+		irf_all_var(:,:,i2,i1)     = filter(EstMdl_i,W_simul)-simul_ss;
 	end
+end
 
 
-	% plot result
+% plot result
+for i1 = 1:EstMdl.NumSeries
 	figure;
 	for i2 = 1:EstMdl.NumSeries
 		subplot(2,round(EstMdl.NumSeries/2),i2)	
+		IRFnow = squeeze(irf_all_var(:,i2,:,i1));
 		plot(1:T_irf,zeros(1,T_irf),'r:')
 		hold on;
-		IRFmean = mean(Y_simul{i2}')';
-		IRFsd	= std(Y_simul{i2}')';
+		IRFmean = mean(IRFnow,2);
+		IRFsd	= std(IRFnow,[],2);
 		IRFlb 	= IRFmean+IC(1)*IRFsd;
 		IRFub 	= IRFmean+IC(2)*IRFsd;
 		X=[1:T_irf,fliplr(1:T_irf)];                %#create continuous x value array for plotting
